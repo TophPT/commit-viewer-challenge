@@ -4,7 +4,7 @@ import java.io.InputStreamReader;
 public class CmdTest {
     public static void main(String[] args) throws Exception {
         ProcessBuilder builder = new ProcessBuilder(
-                "cmd.exe", "/c", "git log");
+                "cmd.exe", "/c", "git clone --bare https://github.com/stayawayinesctec/stayaway-app.git tmpdir && cd tmpdir && git log");
         builder.redirectErrorStream(true);
         Process p = builder.start();
         BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
