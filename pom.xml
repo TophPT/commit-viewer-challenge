@@ -12,9 +12,11 @@
     <artifactId>commit-viewer</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>Commit Viewer</name>
-    <description>Demo project for Spring Boot</description>
+    <description>Yet Another Challenge Application</description>
     <properties>
         <java.version>1.8</java.version>
+        <thymeleaf.version>3.0.11.RELEASE</thymeleaf.version>
+        <thymeleaf.layout.dialect.version>2.1.1</thymeleaf.layout.dialect.version>
     </properties>
     <dependencies>
         <dependency>
@@ -28,14 +30,5 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>
