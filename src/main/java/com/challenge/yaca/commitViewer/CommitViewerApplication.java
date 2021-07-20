@@ -9,11 +9,11 @@ import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConf
 @SpringBootApplication(exclude = ErrorMvcAutoConfiguration.class)
 public class CommitViewerApplication {
 
-    private static final Logger logger = LoggerFactory.getLogger(CommitViewerApplication.class);
+    static final Logger logger = LoggerFactory.getLogger(CommitViewerApplication.class);
 
     public static void main(String[] args) {
         SpringApplication.run(CommitViewerApplication.class, args);
-        logger.info("CommitViewerApplication is now listenning on: http://localhost:8080/api/commits");
+        logger.info("CommitViewerApplication is now listening on: http://localhost:8080/api/commit-viewer");
     }
 
 }

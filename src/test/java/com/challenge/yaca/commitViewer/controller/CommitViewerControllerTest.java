@@ -1,18 +1,17 @@
 package com.challenge.yaca.commitViewer.controller;
 
-import com.challenge.yaca.commitViewer.model.Commit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.ResponseEntity;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static com.challenge.yaca.commitViewer.utils.Commands.CommandExecuteException;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 class CommitViewerControllerTest {
@@ -25,15 +24,14 @@ class CommitViewerControllerTest {
 
     @BeforeEach
     void contextLoads() {
-//        fail();
         assertNotNull(commitViewerController);
-
+        assertNotNull(httpServletRequest);
     }
 
     @Test
-    void shouldGetCommitsForCurrentRepository() {
+    void shouldGetCommitsForCurrentRepository() throws CommandExecuteException {
         Mockito.when(httpServletRequest.getRequestURI()).thenReturn("/");
-        ResponseEntity<List<Commit>> listResponseEntity = commitViewerController.get(httpServletRequest, null);
+        commitViewerController.getCommitsByRepositoryUrl(httpServletRequest, null);
         assertTrue(true);
     }
 }
