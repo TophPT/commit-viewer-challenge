@@ -9,11 +9,11 @@
    * `$ mvn start`
 ---
 
-Server is now listening on: `http://localhost:8080/api/commit-viewer/`
+Server is now listening on: `http://localhost:8080/api/v1/commit-viewer/`
 
 ### User guide:
 1. Copy the `/owner/repo` part from a public repository, e.g., `/TophPT/commit-viewer-challenge`
-2. Paste it after our endpoint: `http://localhost:8080/api/commit-viewer/TophPT/commit-viewer-challenge`
+2. Paste it after our endpoint: `http://localhost:8080/api/v1/commit-viewer/TophPT/commit-viewer-challenge`
 
 ### Everything that you should know before you look into the code:
  * I've never started an application from scratch on my own: That was challenging!
