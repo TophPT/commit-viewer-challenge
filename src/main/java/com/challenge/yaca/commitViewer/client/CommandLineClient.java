@@ -21,8 +21,8 @@ import java.util.regex.Pattern;
  * Depending on the server environment, the used commands can be different.
  * Currently, we're only using windows commands, because I do not own any Linux/Unix server to run tests on.
  */
-@Component
-public final class CommandLineClient {
+@Component("commandLineClient")
+public class CommandLineClient {
 
     static final Logger logger = LoggerFactory.getLogger(CommandLineClient.class);
 
@@ -41,26 +41,21 @@ public final class CommandLineClient {
     /**
      * Commands to fetch commits from any repository
      */
-    private final String COMMAND_LINE = "cmd.exe";
-    private final String DIR = "/c";
+    final String COMMAND_LINE = "cmd.exe";
+    final String DIR = "/c";
 
-    private final String REPOSITORY_URL = "https://github.com/%s/%s.git";
-    private final String GIT_LOG = "git clone --bare --no-checkout %s tmpdir && cd tmpdir && git log";
+    final String REPOSITORY_URL = "https://github.com/%s/%s.git";
+    final String GIT_LOG = "git clone --bare --no-checkout %s tmpdir && cd tmpdir && git log";
 
-    private final String RMDIR = "rmdir tmpdir /s /q";
-
-    /**
-     * Date format to be used to get the dates from the console output.
-     */
-    private final SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy", Locale.ENGLISH);
+    final String RMDIR = "rmdir tmpdir /s /q";
 
     /**
      * Standard keys used for parsing fields from the console output.
      */
-    private final String SHA = "commit ";
-    private final String AUTHOR_NAME = "Author: ";
-    private final String DATE = "Date:   ";
-    private final String MESSAGE = "    ";
+    final String SHA = "commit ";
+    final String AUTHOR_NAME = "Author: ";
+    final String DATE = "Date:   ";
+    final String MESSAGE = "    ";
 
     /**
      * Simple way of removing the string key, from the string target
@@ -79,6 +74,7 @@ public final class CommandLineClient {
      * @param target    complete line from the console log output
      */
     private Date readFieldAsDate(String target) throws DateParseException {
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy", Locale.ENGLISH);
         String dateInString = readFieldAsString(target, DATE);
         try {
             return formatter.parse(dateInString);
@@ -94,23 +90,6 @@ public final class CommandLineClient {
         return authorLine.replaceAll("<.*", "").trim();
     }
 
-    /**
-     * Returns the email. That's displayed betweeen < and >.
-     */
-    private String getEmail(String authorLine) {
-        Pattern emailRgxPattern = Pattern.compile("(?<=\\<)(.*?)(?=\\>)");
-        Matcher matcher = emailRgxPattern.matcher(authorLine);
-        return matcher.group(0);
-    }
-
-    /**
-     *
-     * @param commits   list of commits
-     * @param commit
-     * @param line
-     * @return
-     * @throws DateParseException
-     */
     private Commit commitExtractor(List<Commit> commits, Commit commit, String line) throws DateParseException {
         if (line.startsWith(SHA)) {
             String id = readFieldAsString(line, SHA);
@@ -121,8 +100,8 @@ public final class CommandLineClient {
         if (line.startsWith(AUTHOR_NAME)) {
             String authorLine = readFieldAsString(line, AUTHOR_NAME);
             Author author = new Author();
-            author.setName(getName(authorLine));
-            author.setEmail(getEmail(authorLine));
+            String authorName = getName(authorLine);
+            author.setName(authorName);
             CommitInfo commitInfo = new CommitInfo();
             commitInfo.setAuthor(author);
             commit.setCommitInfo(commitInfo);
@@ -187,7 +166,7 @@ public final class CommandLineClient {
      * @param command   command to be executed
      * @throws CommandExecuteException  when ProcessBuilder::start() fails
      */
-    private BufferedReader execute(String command) throws CommandExecuteException {
+    BufferedReader execute(String command) throws CommandExecuteException {
         logger.info("Executing {} command line:", COMMAND_LINE);
         logger.info("\t Command: {}", command);
 
@@ -209,7 +188,7 @@ public final class CommandLineClient {
      *
      * @throws CommandExecuteException  when ProcessBuilder::start() fails
      */
-    private void removeTmpDir() throws CommandExecuteException {
+    void removeTmpDir() throws CommandExecuteException {
         logger.info("Executing {} command line:", COMMAND_LINE);
         logger.info("\t Command: {}", RMDIR);
 

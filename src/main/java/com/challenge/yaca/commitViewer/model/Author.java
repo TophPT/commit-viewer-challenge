@@ -11,9 +11,6 @@ public class Author {
     @JsonProperty("name")
     private String name;
 
-    @JsonProperty("email")
-    private String email;
-
     @JsonProperty("date")
     private Date date;
 
@@ -25,14 +22,6 @@ public class Author {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public Date getDate() {

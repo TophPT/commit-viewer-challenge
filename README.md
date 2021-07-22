@@ -9,7 +9,7 @@
    * `$ mvn start`
 ---
 
-Server is now listening on: is now listening on: `http://localhost:8080/api/commit-viewer/`
+Server is now listening on: `http://localhost:8080/api/commit-viewer/`
 
 ### User guide:
 1. Copy the `/owner/repo` part from a public repository, e.g., `/TophPT/commit-viewer-challenge`

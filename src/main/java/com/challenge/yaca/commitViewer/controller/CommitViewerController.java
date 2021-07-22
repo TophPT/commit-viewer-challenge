@@ -13,7 +13,7 @@ import static com.challenge.yaca.commitViewer.client.CommandLineClient.CommandEx
 /**
  * Commit Viewer endpoints
  */
-@RestController
+@RestController("commitViewerController")
 @RequestMapping(value = "/api/v1/commit-viewer", produces = MediaType.APPLICATION_JSON_VALUE)
 public class CommitViewerController {
 
@@ -34,7 +34,7 @@ public class CommitViewerController {
                 " # Either configure Maven or use your IDE build in Maven:\n" +
                 "\t $ mvn clean install\n" +
                 "\t $ mvn start\n\n" +
-                " # Server is now listening on: is now listening on: http://localhost:8080/api/v1/commit-viewer/\n\n";
+                " # Server is now listening on: http://localhost:8080/api/v1/commit-viewer/\n\n";
     }
 
     @GetMapping("/{owner}/{repo}")

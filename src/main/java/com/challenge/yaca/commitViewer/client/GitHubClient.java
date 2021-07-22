@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 /**
  * Client for making requests to the GitHub API
  */
-@Component
+@Component("GitHubClient")
 public class GitHubClient {
 
     public static class GitHubClientException extends RestClientException {
