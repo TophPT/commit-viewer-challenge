@@ -1,8 +1,12 @@
-package com.challenge.yaca.commitViewer.utils;
+package com.challenge.yaca.commitViewer.client;
 
+import com.challenge.yaca.commitViewer.model.Author;
 import com.challenge.yaca.commitViewer.model.Commit;
+import com.challenge.yaca.commitViewer.model.CommitInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,21 +14,17 @@ import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Depending on the server environment, the used commands can be different.
  * Currently, we're only using windows commands, because I do not own any Linux/Unix server to run tests on.
- *
- * Stateless utility class
  */
-public final class Commands {
+@Component
+public final class CommandLineClient {
 
-    static Logger logger = LoggerFactory.getLogger(Commands.class);
-
-    /**
-     * Private constructor to prevent instantiation
-     */
-    private Commands() { }
+    static final Logger logger = LoggerFactory.getLogger(CommandLineClient.class);
 
     public static class DateParseException extends ParseException {
         public DateParseException(String message, int errorOffset) {
@@ -41,44 +41,44 @@ public final class Commands {
     /**
      * Commands to fetch commits from any repository
      */
-    public static final String COMMAND_LINE = "cmd.exe";
-    public static final String DIR = "/c";
+    private final String COMMAND_LINE = "cmd.exe";
+    private final String DIR = "/c";
 
-    public static final String GIT_LOG = "git log";
-    public static final String GIT_LOG_REMOTE = "git clone --bare --no-checkout %s tmpdir && cd tmpdir && git log";
+    private final String REPOSITORY_URL = "https://github.com/%s/%s.git";
+    private final String GIT_LOG = "git clone --bare --no-checkout %s tmpdir && cd tmpdir && git log";
 
-    public static  final String RMDIR = "rmdir tmpdir /s /q";
+    private final String RMDIR = "rmdir tmpdir /s /q";
 
     /**
      * Date format to be used to get the dates from the console output.
      */
-    public static final SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy", Locale.ENGLISH);
+    private final SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy", Locale.ENGLISH);
 
     /**
      * Standard keys used for parsing fields from the console output.
-     * TODO a more detailed output could be created to improve parsing code
      */
-    private static final String SHA = "commit ";
-    private static final String AUTHOR = "Author: ";
-    private static final String DATE = "Date:   ";
-    private static final String MESSAGE = "    ";
+    private final String SHA = "commit ";
+    private final String AUTHOR_NAME = "Author: ";
+    private final String DATE = "Date:   ";
+    private final String MESSAGE = "    ";
 
     /**
-     * TODO this might be handy if any format is done to the output itself, currently a simple replace works.
+     * Simple way of removing the string key, from the string target
      *
      * @param target    complete line from the console log output
      * @param key       key used for string parsing, to extract the desire data
      * @return          a string containing only the information associated with the key.
      */
-    private static String readFieldAsString(String target, String key) {
+    private String readFieldAsString(String target, String key) {
         return target.replace(key, "");
     }
 
     /**
      * Same as readFileAsString, but returns a date.
+     *
      * @param target    complete line from the console log output
      */
-    private static Date readFieldAsDate(String target) throws DateParseException {
+    private Date readFieldAsDate(String target) throws DateParseException {
         String dateInString = readFieldAsString(target, DATE);
         try {
             return formatter.parse(dateInString);
@@ -88,30 +88,58 @@ public final class Commands {
     }
 
     /**
-     * TODO this process could be improved, but a more complex map on the output needed to be performed.
+     * Returns the name. That's displayed before the email, that starts with <.
      */
-    private static Commit commitExtractor(List<Commit> commits, Commit commit, String line) throws DateParseException {
+    private String getName(String authorLine) {
+        return authorLine.replaceAll("<.*", "").trim();
+    }
+
+    /**
+     * Returns the email. That's displayed betweeen < and >.
+     */
+    private String getEmail(String authorLine) {
+        Pattern emailRgxPattern = Pattern.compile("(?<=\\<)(.*?)(?=\\>)");
+        Matcher matcher = emailRgxPattern.matcher(authorLine);
+        return matcher.group(0);
+    }
+
+    /**
+     *
+     * @param commits   list of commits
+     * @param commit
+     * @param line
+     * @return
+     * @throws DateParseException
+     */
+    private Commit commitExtractor(List<Commit> commits, Commit commit, String line) throws DateParseException {
         if (line.startsWith(SHA)) {
             String id = readFieldAsString(line, SHA);
-            commit = new Commit(id);
+            commit = new Commit();
+            commit.setId(id);
         }
 
-        if (line.startsWith(AUTHOR)) {
-            String author = readFieldAsString(line, AUTHOR);
-            commit.setAuthor(author);
+        if (line.startsWith(AUTHOR_NAME)) {
+            String authorLine = readFieldAsString(line, AUTHOR_NAME);
+            Author author = new Author();
+            author.setName(getName(authorLine));
+            author.setEmail(getEmail(authorLine));
+            CommitInfo commitInfo = new CommitInfo();
+            commitInfo.setAuthor(author);
+            commit.setCommitInfo(commitInfo);
         }
 
         if (line.startsWith(DATE)) {
             Date date = readFieldAsDate(line);
-            commit.setDate(date);
+            commit.getCommitInfo().getAuthor().setDate(date);
         }
 
         if (line.startsWith(MESSAGE) && !line.trim().isEmpty()) {
-            String message = line.replace(MESSAGE, "");
-            commit.setMessage(message);
+            String message = readFieldAsString(line, MESSAGE);
+            commit.getCommitInfo().setMessage(message);
+
+            logger.debug("Adding 1 commit from {}", commit.getCommitInfo().getAuthor());
+            logger.debug("\t{}", commit.getCommitInfo().getMessage());
             commits.add(commit);
-            logger.debug("Adding 1 commit from {}", commit.getAuthor());
-            logger.debug("\t{}", commit.getMessage());
         }
 
         return commit;
@@ -120,11 +148,17 @@ public final class Commands {
     /**
      * Use the git CLI to retrieve a commit list
      * In order to help with testing, in case repoUrl is null, it will retrieve the commit list for the current repository
-     * @param repoUrl   GitHub url
-     * @return          commit list, ordered by date
+     *
+     * @param owner Repository's owner name
+     * @param repo  Repository's name
+     * @return      commit stream, ordered by date
+     * @throws CommandExecuteException  when ProcessBuilder::start() fails
      */
-    public static List<Commit> readCommitsFromCommandLine(String repoUrl) throws CommandExecuteException {
-        String command = repoUrl != null ? String.format(GIT_LOG_REMOTE, repoUrl) : GIT_LOG;
+    public List<Commit> getCommitLogs(@NonNull String owner, @NonNull String repo) throws CommandExecuteException {
+        logger.info("Using git CLI to get commits, a temporary folder will be created.");
+        String command = String.format(
+                GIT_LOG,
+                String.format(REPOSITORY_URL, owner, repo));
 
         List<Commit> commits = new ArrayList<>();
 
@@ -151,9 +185,9 @@ public final class Commands {
      * Executes the command on windows cmd.exe, the return will need to be parsed into model classes.
      *
      * @param command   command to be executed
-     * @throws CommandExecuteException  when something goes wrong with ProcessBuilder::start
+     * @throws CommandExecuteException  when ProcessBuilder::start() fails
      */
-    private static BufferedReader execute(String command) throws CommandExecuteException {
+    private BufferedReader execute(String command) throws CommandExecuteException {
         logger.info("Executing {} command line:", COMMAND_LINE);
         logger.info("\t Command: {}", command);
 
@@ -169,7 +203,13 @@ public final class Commands {
         }
     }
 
-    private static void removeTmpDir() throws CommandExecuteException {
+    /**
+     * I didn't find any other way of getting the list of commits from git cli, without checkout.
+     * So, I needed a rmdir after to clear the project folder.
+     *
+     * @throws CommandExecuteException  when ProcessBuilder::start() fails
+     */
+    private void removeTmpDir() throws CommandExecuteException {
         logger.info("Executing {} command line:", COMMAND_LINE);
         logger.info("\t Command: {}", RMDIR);
 
@@ -178,7 +218,7 @@ public final class Commands {
         builder.redirectErrorStream(true);
 
         try {
-            Process p = builder.start();
+            builder.start();
         } catch (IOException e) {
             throw new CommandExecuteException(e.getMessage(), e.getCause());
         }

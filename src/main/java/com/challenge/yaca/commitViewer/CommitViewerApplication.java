@@ -13,7 +13,7 @@ public class CommitViewerApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(CommitViewerApplication.class, args);
-        logger.info("CommitViewerApplication is now listening on: http://localhost:8080/api/commit-viewer");
+        logger.info("CommitViewerApplication is now listening on: http://localhost:8080/api/v1/commit-viewer/");
     }
 
 }

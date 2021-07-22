@@ -1,48 +1,40 @@
 package com.challenge.yaca.commitViewer.model;
 
-import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Commit implements Comparable<Commit> {
 
-    private final String id;
-    private String author;
-    private Date date;
-    private String message;
+    @JsonProperty("sha")
+    private String id;
 
-    public Commit(String id) {
-        this.id = id;
-    }
+    @JsonProperty("commit")
+    private CommitInfo commitInfo;
+
+    public Commit() { }
 
     public String getId() {
         return id;
     }
 
-    public String getAuthor() {
-        return author;
+    public void setId(String id) {
+        this.id = id;
     }
 
-    public void setAuthor(String author) {
-        this.author = author;
+    public CommitInfo getCommitInfo() {
+        return commitInfo;
     }
 
-    public Date getDate() {
-        return date;
-    }
-
-    public void setDate(Date date) {
-        this.date = date;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public String getMessage() {
-        return message;
+    public void setCommitInfo(CommitInfo commitInfo) {
+        this.commitInfo = commitInfo;
     }
 
     @Override
-    public int compareTo(Commit o) {
-        return this.date.compareTo(o.date);
+    public int compareTo(Commit other) {
+        return this.getCommitInfo().getAuthor().getDate()
+                .compareTo(other.getCommitInfo().getAuthor().getDate());
     }
+
+
 }
